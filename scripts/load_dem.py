@@ -2,7 +2,7 @@ import rasterio
 import matplotlib.pyplot as plt
 import numpy as np
 
-dem_path=r"E:\Projects\Final Year Project\datasets\raw\dem\cop30\rasters_COP30\wayanad_cop30_dem.tif"
+dem_path=r"E:\Projects\Final Year Project\datasets\processed\dem\cop30\rasters_COP30\wayanad_cop30_dem.tif"
 
 with rasterio.open(dem_path) as dem:
     elevation=dem.read(1)
