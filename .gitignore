@@ -37,3 +37,10 @@ datasets/processed/
 
 # Temporary files
 *.tmp
+
+# Frontend dependencies
+frontend/node_modules/
+
+# Frontend build
+frontend/dist/
+frontend/build/

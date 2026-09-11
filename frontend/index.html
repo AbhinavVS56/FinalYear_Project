@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Landslide Risk Dashboard</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ================= HEADER ================= -->
+
+    <header class="topbar">
+
+        <div class="brand">
+            <div class="brand-icon">◈</div>
+
+            <div>
+                <h1>LANDSLIDE MONITOR</h1>
+                <span>Wayanad • Risk Assessment Dashboard</span>
+            </div>
+        </div>
+
+        <div class="header-status">
+            <span class="status-dot"></span>
+            <span>System Prototype</span>
+        </div>
+
+    </header>
+
+
+    <!-- ================= MAIN ================= -->
+
+    <main class="dashboard">
+
+        <!-- ================= OVERVIEW ================= -->
+
+        <section class="page-heading">
+
+            <div>
+                <p class="eyebrow">REGIONAL OVERVIEW</p>
+
+                <h2>Landslide Risk Assessment</h2>
+
+                <p class="subtitle">
+                    Terrain-based landslide susceptibility monitoring
+                </p>
+            </div>
+
+            <div class="last-update">
+                <span>LAST UPDATED</span>
+                <strong id="updateTime">--:--</strong>
+            </div>
+
+        </section>
+
+
+        <!-- ================= SUMMARY CARDS ================= -->
+
+        <section class="summary-grid">
+
+            <article class="summary-card">
+
+                <div class="card-top">
+                    <span>CURRENT RISK</span>
+                    <span class="card-icon">⚠</span>
+                </div>
+
+                <h3 class="risk-high">HIGH</h3>
+
+                <p>
+                    Preliminary terrain-based assessment
+                </p>
+
+            </article>
+
+
+            <article class="summary-card">
+
+                <div class="card-top">
+                    <span>CONFIDENCE</span>
+                    <span class="card-icon">◉</span>
+                </div>
+
+                <h3>--%</h3>
+
+                <p>
+                    Model confidence unavailable
+                </p>
+
+            </article>
+
+
+            <article class="summary-card">
+
+                <div class="card-top">
+                    <span>STATIC FEATURES</span>
+                    <span class="card-icon">◇</span>
+                </div>
+
+                <h3>5</h3>
+
+                <p>
+                    Terrain factors processed
+                </p>
+
+            </article>
+
+
+            <article class="summary-card">
+
+                <div class="card-top">
+                    <span>DYNAMIC DATA</span>
+                    <span class="card-icon">◌</span>
+                </div>
+
+                <h3 class="pending">PENDING</h3>
+
+                <p>
+                    Rainfall integration not connected
+                </p>
+
+            </article>
+
+        </section>
+
+
+        <!-- ================= MAIN GRID ================= -->
+
+        <section class="content-grid">
+
+
+            <!-- ================= MAP ================= -->
+
+            <article class="panel map-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <p class="eyebrow">SPATIAL VIEW</p>
+                        <h3>Wayanad Risk Map</h3>
+                    </div>
+
+                    <button id="resetMap" class="small-button">
+                        Reset View
+                    </button>
+
+                </div>
+
+
+                <div class="map-container">
+
+                    <!-- Decorative terrain background -->
+
+                    <div class="terrain terrain-1"></div>
+                    <div class="terrain terrain-2"></div>
+                    <div class="terrain terrain-3"></div>
+                    <div class="terrain terrain-4"></div>
+
+                    <div class="map-label label-north">
+                        N
+                    </div>
+
+                    <div class="map-label label-south">
+                        S
+                    </div>
+
+                    <div class="map-location location-1">
+                        <span></span>
+                        <small>North Wayanad</small>
+                    </div>
+
+                    <div class="map-location location-2">
+                        <span></span>
+                        <small>Central Wayanad</small>
+                    </div>
+
+                    <div class="map-location location-3">
+                        <span></span>
+                        <small>South Wayanad</small>
+                    </div>
+
+                    <div class="map-center-text">
+
+                        <div class="map-symbol">⌁</div>
+
+                        <strong>WAYANAD</strong>
+
+                        <span>INTERACTIVE MAP</span>
+
+                    </div>
+
+                </div>
+
+
+                <div class="map-footer">
+
+                    <div class="legend">
+
+                        <span>
+                            <i class="legend-low"></i>
+                            Low
+                        </span>
+
+                        <span>
+                            <i class="legend-medium"></i>
+                            Moderate
+                        </span>
+
+                        <span>
+                            <i class="legend-high"></i>
+                            High
+                        </span>
+
+                        <span>
+                            <i class="legend-extreme"></i>
+                            Very High
+                        </span>
+
+                    </div>
+
+                    <span class="map-note">
+                        Interactive GIS layer — prototype
+                    </span>
+
+                </div>
+
+            </article>
+
+
+            <!-- ================= RISK PANEL ================= -->
+
+            <article class="panel risk-panel">
+
+                <div class="panel-header">
+
+                    <div>
+                        <p class="eyebrow">SELECTED REGION</p>
+                        <h3>Central Wayanad</h3>
+                    </div>
+
+                    <span class="risk-badge">
+                        HIGH RISK
+                    </span>
+
+                </div>
+
+
+                <div class="risk-score">
+
+                    <div class="score-ring">
+
+                        <div>
+                            <strong>--</strong>
+                            <span>RISK</span>
+                        </div>
+
+                    </div>
+
+                    <div class="score-info">
+
+                        <p>
+                            Final risk score will be generated
+                            by the ML model.
+                        </p>
+
+                        <div class="confidence-line">
+
+                            <span>Confidence</span>
+
+                            <strong>--</strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="divider"></div>
+
+
+                <div class="risk-factors">
+
+                    <h4>Primary Terrain Factors</h4>
+
+                    <div class="factor">
+
+                        <span>Elevation</span>
+
+                        <strong>Available</strong>
+
+                    </div>
+
+                    <div class="factor">
+
+                        <span>Slope</span>
+
+                        <strong>Available</strong>
+
+                    </div>
+
+                    <div class="factor">
+
+                        <span>Aspect</span>
+
+                        <strong>Available</strong>
+
+                    </div>
+
+                    <div class="factor">
+
+                        <span>Curvature</span>
+
+                        <strong>Available</strong>
+
+                    </div>
+
+                    <div class="factor">
+
+                        <span>TRI</span>
+
+                        <strong>Available</strong>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+        </section>
+
+
+        <!-- ================= LOWER GRID ================= -->
+
+        <section class="lower-grid">
+
+
+            <!-- ================= DYNAMIC DATA ================= -->
+
+            <article class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <p class="eyebrow">DYNAMIC CONDITIONS</p>
+
+                        <h3>Environmental Triggers</h3>
+
+                    </div>
+
+                    <span class="coming-soon">
+                        IN DEVELOPMENT
+                    </span>
+
+                </div>
+
+
+                <div class="dynamic-grid">
+
+                    <div class="dynamic-item">
+
+                        <span>RAINFALL</span>
+
+                        <strong>-- mm</strong>
+
+                        <small>Data source pending</small>
+
+                    </div>
+
+                    <div class="dynamic-item">
+
+                        <span>24H ACCUMULATION</span>
+
+                        <strong>-- mm</strong>
+
+                        <small>Data source pending</small>
+
+                    </div>
+
+                    <div class="dynamic-item">
+
+                        <span>7D ACCUMULATION</span>
+
+                        <strong>-- mm</strong>
+
+                        <small>Data source pending</small>
+
+                    </div>
+
+                    <div class="dynamic-item">
+
+                        <span>SOIL MOISTURE</span>
+
+                        <strong>--</strong>
+
+                        <small>Planned feature</small>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- ================= SYSTEM PIPELINE ================= -->
+
+            <article class="panel">
+
+                <div class="panel-header">
+
+                    <div>
+
+                        <p class="eyebrow">PROCESSING PIPELINE</p>
+
+                        <h3>System Progress</h3>
+
+                    </div>
+
+                </div>
+
+
+                <div class="pipeline">
+
+                    <div class="pipeline-step completed">
+
+                        <span>01</span>
+
+                        <div>
+                            <strong>DEM Processing</strong>
+                            <small>Completed</small>
+                        </div>
+
+                    </div>
+
+                    <div class="pipeline-line"></div>
+
+
+                    <div class="pipeline-step completed">
+
+                        <span>02</span>
+
+                        <div>
+                            <strong>Terrain Features</strong>
+                            <small>Completed</small>
+                        </div>
+
+                    </div>
+
+                    <div class="pipeline-line"></div>
+
+
+                    <div class="pipeline-step active">
+
+                        <span>03</span>
+
+                        <div>
+                            <strong>Historical Inventory</strong>
+                            <small>In progress</small>
+                        </div>
+
+                    </div>
+
+                    <div class="pipeline-line"></div>
+
+
+                    <div class="pipeline-step pending-step">
+
+                        <span>04</span>
+
+                        <div>
+                            <strong>Static ML Model</strong>
+                            <small>Pending</small>
+                        </div>
+
+                    </div>
+
+                    <div class="pipeline-line"></div>
+
+
+                    <div class="pipeline-step pending-step">
+
+                        <span>05</span>
+
+                        <div>
+                            <strong>Dynamic Model</strong>
+                            <small>Pending</small>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        </section>
+
+
+        <!-- ================= EXPLANATION ================= -->
+
+        <section class="panel explanation-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <p class="eyebrow">EXPLAINABILITY</p>
+
+                    <h3>Why is this area at risk?</h3>
+
+                </div>
+
+                <span class="coming-soon">
+                    PLANNED
+                </span>
+
+            </div>
+
+
+            <div class="explanation-content">
+
+                <div class="explanation-icon">
+                    ✦
+                </div>
+
+                <div>
+
+                    <p>
+                        Once the machine learning model is trained,
+                        this section will explain the main factors
+                        contributing to the predicted risk.
+                    </p>
+
+                    <div class="future-tags">
+
+                        <span>SHAP</span>
+                        <span>Historical Cases</span>
+                        <span>Confidence</span>
+                        <span>Decision Support</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer>
+
+        <span>LANDSLIDE MONITOR</span>
+
+        <span>
+            Frontend Prototype • Wayanad
+        </span>
+
+    </footer>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

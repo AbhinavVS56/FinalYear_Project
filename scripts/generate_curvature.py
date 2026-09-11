@@ -2,11 +2,14 @@ import rasterio
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.ndimage import gaussian_filter
+from pathlib import Path
 
 
-dem_path = r"E:\Projects\Final Year Project\datasets\processed\dem\cop30\rasters_COP30\wayanad_cop30_dem.tif"
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-output_path = r"E:\Projects\Final Year Project\datasets\processed\curvature\wayanad_curvature.tif"
+dem_path = BASE_DIR / "datasets" / "processed" / "dem" / "cop30" / "rasters_COP30" / "wayanad_cop30_dem.tif"
+
+output_path = BASE_DIR / "datasets" / "processed" / "curvature" / "wayanad_curvature.tif"
 
 with rasterio.open(dem_path) as dem:
 
