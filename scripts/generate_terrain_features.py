@@ -1,141 +1,109 @@
 import rasterio
 import numpy as np
-from scipy.ndimage import gaussian_filter, uniform_filter
 from pathlib import Path
+from scipy.ndimage import gaussian_filter
 
-# ============================================================
-# PROJECT PATHS
-# ============================================================
+DEM_PATH = Path("../datasets/processed/dem/idukki_dem_utm43n.tif")
+OUTPUT_DIR = Path("../datasets/processed/terrain_features")
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-
-DEM_PATH = (
-    PROJECT_ROOT
-    / "datasets"
-    / "processed"
-    / "dem"
-    / "idukki_dem_utm43n.tif"
-)
-
-OUTPUT_DIR = PROJECT_ROOT / "datasets" / "processed" / "terrain_features"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-# ============================================================
-# LOAD DEM
-# ============================================================
+def save_raster(path, data, profile):
+    profile = profile.copy()
+    profile.update(
+        dtype="float32",
+        count=1,
+        nodata=np.nan,
+        compress="lzw"
+    )
 
-print("Loading Idukki DEM...")
+    with rasterio.open(path, "w", **profile) as dst:
+        dst.write(data.astype("float32"), 1)
+
+
+print("Loading DEM...")
 
 with rasterio.open(DEM_PATH) as src:
-
-    elevation = src.read(1).astype(np.float32)
+    dem = src.read(1).astype(np.float32)
     profile = src.profile.copy()
-
-    pixel_x = src.transform.a
-    pixel_y = abs(src.transform.e)
-
-    nodata = src.nodata
+    transform = src.transform
 
 print("DEM loaded.")
-print("Shape:", elevation.shape)
-print("Pixel size:", pixel_x, "x", pixel_y, "meters")
+print("Shape:", dem.shape)
+print("CRS:", profile["crs"])
+print("Resolution:", abs(transform.a))
 
+# Valid DEM cells
+valid = np.isfinite(dem) & (dem > 0)
 
-# ============================================================
-# HANDLE NODATA
-# ============================================================
+print("Valid pixels:", np.sum(valid))
 
-if nodata is not None:
-    valid_mask = elevation != nodata
-else:
-    valid_mask = np.isfinite(elevation)
+# ---------------------------------------------------------
+# IMPORTANT:
+# Derivatives are calculated ONLY where a complete
+# 3x3 neighbourhood is valid.
+# No artificial elevation filling is used.
+# ---------------------------------------------------------
 
-elevation = np.where(valid_mask, elevation, np.nan)
+# Valid 3x3 neighbourhood
+valid_neighbourhood = valid.copy()
 
+for dy in (-1, 0, 1):
+    for dx in (-1, 0, 1):
+        shifted = np.zeros_like(valid)
+        y1 = max(0, dy)
+        y2 = min(valid.shape[0], valid.shape[0] + dy)
+        x1 = max(0, dx)
+        x2 = min(valid.shape[1], valid.shape[1] + dx)
 
-# ============================================================
-# 1. ELEVATION
-# ============================================================
+        sy1 = max(0, -dy)
+        sy2 = min(valid.shape[0], valid.shape[0] - dy)
+        sx1 = max(0, -dx)
+        sx2 = min(valid.shape[1], valid.shape[1] - dx)
 
-print("\nGenerating Elevation...")
+        shifted[y1:y2, x1:x2] = valid[sy1:sy2, sx1:sx2]
 
-elevation_output = OUTPUT_DIR / "idukki_elevation.tif"
+        valid_neighbourhood &= shifted
 
-elevation_save = np.where(
-    valid_mask,
+# ---------------------------------------------------------
+# Elevation
+# ---------------------------------------------------------
+
+print("Generating elevation...")
+
+elevation = np.where(valid, dem, np.nan).astype(np.float32)
+
+save_raster(
+    OUTPUT_DIR / "idukki_elevation.tif",
     elevation,
-    -9999
-).astype(np.float32)
-
-elevation_profile = profile.copy()
-elevation_profile.update(
-    dtype="float32",
-    count=1,
-    nodata=-9999,
-    compress="lzw"
+    profile
 )
 
-with rasterio.open(elevation_output, "w", **elevation_profile) as dst:
-    dst.write(elevation_save, 1)
+# ---------------------------------------------------------
+# Slope + Aspect
+# ---------------------------------------------------------
 
-print("Elevation saved.")
+print("Generating slope and aspect...")
 
+# Temporary array only for numerical differentiation.
+# Boundary cells are invalidated afterward.
+work = dem.astype(np.float64)
 
-# ============================================================
-# FILL NAN FOR DERIVATIVES
-# ============================================================
-
-# Temporary filled DEM for calculations
-filled = np.nan_to_num(
-    elevation,
-    nan=np.nanmedian(elevation)
-).astype(np.float32)
-
-
-# ============================================================
-# 2. SLOPE
-# ============================================================
-
-print("\nGenerating Slope...")
+# Fill invalid cells only temporarily so np.gradient can run.
+# These cells themselves AND their immediate neighbours
+# are later removed using valid_neighbourhood.
+work[~valid] = np.nanmean(dem[valid])
 
 dy, dx = np.gradient(
-    filled,
-    pixel_y,
-    pixel_x
+    work,
+    abs(transform.e),
+    abs(transform.a)
 )
 
 slope = np.degrees(
-    np.arctan(
-        np.sqrt(dx**2 + dy**2)
-    )
-).astype(np.float32)
-
-slope = np.where(valid_mask, slope, -9999)
-
-slope_output = OUTPUT_DIR / "idukki_slope.tif"
-
-with rasterio.open(
-    slope_output,
-    "w",
-    **elevation_profile
-) as dst:
-    dst.write(slope, 1)
-
-print("Slope saved.")
-print(
-    "Slope range:",
-    np.nanmin(np.where(valid_mask, slope, np.nan)),
-    "to",
-    np.nanmax(np.where(valid_mask, slope, np.nan))
+    np.arctan(np.sqrt(dx ** 2 + dy ** 2))
 )
-
-
-# ============================================================
-# 3. ASPECT
-# ============================================================
-
-print("\nGenerating Aspect...")
 
 aspect = np.degrees(
     np.arctan2(-dx, dy)
@@ -143,187 +111,138 @@ aspect = np.degrees(
 
 aspect = (aspect + 360) % 360
 
-aspect = aspect.astype(np.float32)
+slope[~valid_neighbourhood] = np.nan
+aspect[~valid_neighbourhood] = np.nan
 
-aspect = np.where(valid_mask, aspect, -9999)
-
-aspect_output = OUTPUT_DIR / "idukki_aspect.tif"
-
-with rasterio.open(
-    aspect_output,
-    "w",
-    **elevation_profile
-) as dst:
-    dst.write(aspect, 1)
-
-print("Aspect saved.")
-
-
-# ============================================================
-# 4. CURVATURE
-# ============================================================
-
-print("\nGenerating Curvature...")
-
-# Small Gaussian smoothing reduces tiny DEM noise
-smooth = gaussian_filter(
-    filled,
-    sigma=1
+save_raster(
+    OUTPUT_DIR / "idukki_slope.tif",
+    slope,
+    profile
 )
 
-dy_s, dx_s = np.gradient(
+save_raster(
+    OUTPUT_DIR / "idukki_aspect.tif",
+    aspect,
+    profile
+)
+
+# ---------------------------------------------------------
+# Curvature
+# ---------------------------------------------------------
+
+print("Generating curvature...")
+
+smooth = gaussian_filter(work, sigma=1)
+
+gy, gx = np.gradient(
     smooth,
-    pixel_y,
-    pixel_x
+    abs(transform.e),
+    abs(transform.a)
 )
 
-dyy, _ = np.gradient(
-    dy_s,
-    pixel_y,
-    pixel_x
+gyy, _ = np.gradient(
+    gy,
+    abs(transform.e),
+    abs(transform.a)
 )
 
-_, dxx = np.gradient(
-    dx_s,
-    pixel_y,
-    pixel_x
+_, gxx = np.gradient(
+    gx,
+    abs(transform.e),
+    abs(transform.a)
 )
 
-curvature = (
-    dxx + dyy
-).astype(np.float32)
+curvature = gxx + gyy
 
-curvature = np.where(
-    valid_mask,
+curvature[~valid_neighbourhood] = np.nan
+
+save_raster(
+    OUTPUT_DIR / "idukki_curvature.tif",
     curvature,
-    -9999
+    profile
 )
 
-curvature_output = OUTPUT_DIR / "idukki_curvature.tif"
+# ---------------------------------------------------------
+# TRI
+# ---------------------------------------------------------
 
-with rasterio.open(
-    curvature_output,
-    "w",
-    **elevation_profile
-) as dst:
-    dst.write(curvature, 1)
+print("Generating TRI...")
 
-print("Curvature saved.")
+tri_sum = np.zeros_like(dem, dtype=np.float64)
+tri_count = np.zeros_like(dem, dtype=np.uint8)
 
+center = dem.astype(np.float64)
 
-# ============================================================
-# 5. TRI
-# ============================================================
+for dy in (-1, 0, 1):
+    for dx in (-1, 0, 1):
 
-print("\nGenerating TRI...")
+        if dy == 0 and dx == 0:
+            continue
 
-# 3x3 neighborhood mean
-mean = uniform_filter(
-    filled,
-    size=3,
-    mode="nearest"
-)
+        shifted = np.full_like(center, np.nan)
 
-# Mean squared difference between center and neighbors
-squared_difference = (
-    filled - mean
-) ** 2
+        y1 = max(0, dy)
+        y2 = min(center.shape[0], center.shape[0] + dy)
+        x1 = max(0, dx)
+        x2 = min(center.shape[1], center.shape[1] + dx)
+
+        sy1 = max(0, -dy)
+        sy2 = min(center.shape[0], center.shape[0] - dy)
+        sx1 = max(0, -dx)
+        sx2 = min(center.shape[1], center.shape[1] - dx)
+
+        shifted[y1:y2, x1:x2] = center[sy1:sy2, sx1:sx2]
+
+        valid_pair = valid & np.isfinite(shifted)
+
+        diff = shifted - center
+
+        tri_sum[valid_pair] += diff[valid_pair] ** 2
+        tri_count[valid_pair] += 1
 
 tri = np.sqrt(
-    squared_difference
-).astype(np.float32)
+    tri_sum / np.maximum(tri_count, 1)
+)
 
-tri = np.where(
-    valid_mask,
+# Require complete 8-neighbourhood
+tri[~valid_neighbourhood] = np.nan
+
+save_raster(
+    OUTPUT_DIR / "idukki_tri.tif",
     tri,
-    -9999
+    profile
 )
 
-tri_output = OUTPUT_DIR / "idukki_tri.tif"
+# ---------------------------------------------------------
+# Hillshade
+# ---------------------------------------------------------
 
-with rasterio.open(
-    tri_output,
-    "w",
-    **elevation_profile
-) as dst:
-    dst.write(tri, 1)
+print("Generating hillshade...")
 
-print("TRI saved.")
+azimuth = np.radians(315)
+altitude = np.radians(45)
 
-
-# ============================================================
-# 6. HILLSHADE
-# ============================================================
-
-print("\nGenerating Hillshade...")
-
-azimuth = 315
-altitude = 45
-
-azimuth_rad = np.radians(azimuth)
-altitude_rad = np.radians(altitude)
-
-slope_rad = np.arctan(
-    np.sqrt(dx**2 + dy**2)
-)
-
-aspect_rad = np.arctan2(
-    -dx,
-    dy
-)
+slope_rad = np.radians(slope)
+aspect_rad = np.radians(aspect)
 
 hillshade = (
-    np.sin(altitude_rad) * np.sin(slope_rad)
+    np.sin(altitude) * np.cos(slope_rad)
     +
-    np.cos(altitude_rad)
-    * np.cos(slope_rad)
-    * np.cos(azimuth_rad - aspect_rad)
+    np.cos(altitude)
+    * np.sin(slope_rad)
+    * np.cos(azimuth - aspect_rad)
 )
 
-hillshade = (
-    hillshade * 255
-).astype(np.float32)
+hillshade = 255 * hillshade
 
-hillshade = np.clip(
+hillshade[~valid_neighbourhood] = np.nan
+
+save_raster(
+    OUTPUT_DIR / "idukki_hillshade.tif",
     hillshade,
-    0,
-    255
+    profile
 )
 
-hillshade = np.where(
-    valid_mask,
-    hillshade,
-    -9999
-)
-
-hillshade_output = OUTPUT_DIR / "idukki_hillshade.tif"
-
-with rasterio.open(
-    hillshade_output,
-    "w",
-    **elevation_profile
-) as dst:
-    dst.write(hillshade, 1)
-
-print("Hillshade saved.")
-
-
-# ============================================================
-# FINAL SUMMARY
-# ============================================================
-
-print("\n======================================")
+print("\n" + "=" * 60)
 print("TERRAIN FEATURE GENERATION COMPLETE")
-print("======================================")
-
-print("\nOutput directory:")
-print(OUTPUT_DIR)
-
-print("\nGenerated files:")
-
-for file in OUTPUT_DIR.glob("*.tif"):
-    print(" -", file.name)
-
-print("\nAll terrain layers use:")
-print("CRS: EPSG:32643")
-print("Resolution:", pixel_x, "x", pixel_y, "meters")
+print("=" * 60)

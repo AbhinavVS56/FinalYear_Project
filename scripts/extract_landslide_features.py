@@ -7,26 +7,18 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 LANDSLIDE_PATH = (
-    PROJECT_ROOT
-    / "datasets"
-    / "processed"
-    / "landslides"
-    / "idukki_landslides.gpkg"
+    PROJECT_ROOT / "datasets" / "processed" /
+    "landslides" / "idukki_landslides.gpkg"
 )
 
 FEATURE_DIR = (
-    PROJECT_ROOT
-    / "datasets"
-    / "processed"
-    / "terrain_features"
+    PROJECT_ROOT / "datasets" / "processed" /
+    "terrain_features"
 )
 
 OUTPUT_PATH = (
-    PROJECT_ROOT
-    / "datasets"
-    / "processed"
-    / "training"
-    / "idukki_positive_samples.csv"
+    PROJECT_ROOT / "datasets" / "processed" /
+    "training" / "idukki_positive_samples.csv"
 )
 
 OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -85,11 +77,19 @@ for name, path in features.items():
 
     with rasterio.open(path) as src:
 
-        values = list(src.sample(coordinates))
-
-        values = np.array(values).flatten()
+        values = np.array(
+            list(src.sample(coordinates))
+        ).flatten()
 
         data[name] = values
+
+
+# ------------------------------------------------------------
+# Add coordinates
+# ------------------------------------------------------------
+
+data["x"] = [coord[0] for coord in coordinates]
+data["y"] = [coord[1] for coord in coordinates]
 
 
 # ------------------------------------------------------------

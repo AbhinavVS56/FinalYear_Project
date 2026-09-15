@@ -4,7 +4,6 @@ import numpy as np
 import pandas as pd
 
 from rasterio.features import rasterize
-from rasterio.mask import mask
 from scipy.ndimage import distance_transform_edt
 
 
@@ -13,11 +12,8 @@ from scipy.ndimage import distance_transform_edt
 # --------------------------------------------------
 
 LANDSLIDE_FILE = "../datasets/processed/landslides/idukki_landslides.gpkg"
-
 BOUNDARY_FILE = "../datasets/raw/boundaries/idukki_boundary.gpkg"
-
 FEATURE_DIR = "../datasets/processed/terrain_features"
-
 OUTPUT_FILE = "../datasets/processed/training/idukki_negative_samples.csv"
 
 
@@ -33,25 +29,12 @@ print(f"Landslide points: {len(landslides)}")
 
 
 # --------------------------------------------------
-# LOAD IDUKKI BOUNDARY
+# LOAD ELEVATION / GRID INFORMATION
 # --------------------------------------------------
 
-print("\nLoading Idukki boundary...")
+print("\nLoading terrain grid...")
 
-boundary = gpd.read_file(BOUNDARY_FILE)
-
-print(f"Boundary CRS: {boundary.crs}")
-
-
-# --------------------------------------------------
-# LOAD ELEVATION
-# --------------------------------------------------
-
-print("\nLoading elevation raster...")
-
-elevation_file = f"{FEATURE_DIR}/idukki_elevation.tif"
-
-with rasterio.open(elevation_file) as src:
+with rasterio.open(f"{FEATURE_DIR}/idukki_elevation.tif") as src:
 
     elevation = src.read(1)
 
@@ -66,10 +49,41 @@ print(f"CRS: {crs}")
 
 
 # --------------------------------------------------
-# REPROJECT BOUNDARY
+# LOAD ALL TERRAIN FEATURES
 # --------------------------------------------------
 
+print("\nLoading terrain features...")
+
+feature_names = [
+    "elevation",
+    "slope",
+    "aspect",
+    "curvature",
+    "tri"
+]
+
+features = {}
+
+for name in feature_names:
+
+    path = f"{FEATURE_DIR}/idukki_{name}.tif"
+
+    with rasterio.open(path) as src:
+        features[name] = src.read(1).astype(np.float32)
+
+print("Terrain features loaded.")
+
+
+# --------------------------------------------------
+# LOAD IDUKKI BOUNDARY
+# --------------------------------------------------
+
+print("\nLoading Idukki boundary...")
+
+boundary = gpd.read_file(BOUNDARY_FILE)
 boundary = boundary.to_crs(crs)
+
+print(f"Boundary CRS: {boundary.crs}")
 
 
 # --------------------------------------------------
@@ -134,14 +148,22 @@ print(
 
 print("\nFinding valid candidate pixels...")
 
-valid_elevation = (
-    np.isfinite(elevation) &
-    (elevation > 0)
+# A pixel is usable only if ALL terrain features
+# have valid values.
+
+terrain_valid = np.ones(
+    (height, width),
+    dtype=bool
 )
+
+for name in feature_names:
+
+    terrain_valid &= np.isfinite(features[name])
+
 
 candidate_mask = (
     (idukki_mask == 1) &
-    valid_elevation &
+    terrain_valid &
     (landslide_mask == 0) &
     (~exclusion_zone)
 )
@@ -173,7 +195,6 @@ rng = np.random.default_rng(42)
 
 target = len(landslides)
 
-# Divide Idukki into spatial blocks
 block_rows = 20
 block_cols = 20
 
@@ -201,8 +222,8 @@ for i, (r, c) in enumerate(zip(r_block, c_block)):
     blocks[key].append(i)
 
 
-# Shuffle blocks
 block_keys = list(blocks.keys())
+
 rng.shuffle(block_keys)
 
 selected = []
@@ -210,18 +231,16 @@ selected = []
 
 # --------------------------------------------------
 # FIRST PASS
-# Take samples from different spatial blocks
+# One sample from each spatial block
 # --------------------------------------------------
 
 for key in block_keys:
 
     indices = blocks[key]
 
-    if len(indices) > 0:
-
-        selected.append(
-            rng.choice(indices)
-        )
+    selected.append(
+        rng.choice(indices)
+    )
 
     if len(selected) >= target:
         break
@@ -258,10 +277,8 @@ else:
 
 selected = selected[:target]
 
-
 rows_selected = rows[selected]
 cols_selected = cols[selected]
-
 
 print(
     f"Negative samples selected: "
@@ -270,47 +287,43 @@ print(
 
 
 # --------------------------------------------------
-# EXTRACT TERRAIN FEATURES
+# EXTRACT FEATURES
 # --------------------------------------------------
 
 print("\nExtracting terrain features...")
 
-features = {}
-
-feature_names = [
-    "elevation",
-    "slope",
-    "aspect",
-    "curvature",
-    "tri"
-]
-
+data = {}
 
 for name in feature_names:
 
-    path = f"{FEATURE_DIR}/idukki_{name}.tif"
+    data[name] = features[name][
+        rows_selected,
+        cols_selected
+    ]
 
-    with rasterio.open(path) as src:
+# Spatial coordinates
+xs, ys = rasterio.transform.xy(
+    transform,
+    rows_selected,
+    cols_selected,
+    offset="center"
+)
 
-        data = src.read(1)
-
-        features[name] = data[
-            rows_selected,
-            cols_selected
-        ]
+data["x"] = np.array(xs)
+data["y"] = np.array(ys)
 
 
 # --------------------------------------------------
 # CREATE DATAFRAME
 # --------------------------------------------------
 
-df = pd.DataFrame(features)
+df = pd.DataFrame(data)
 
 df["label"] = 0
 
 
 # --------------------------------------------------
-# REMOVE INVALID VALUES
+# FINAL VALIDITY CHECK
 # --------------------------------------------------
 
 df = df.replace(
@@ -318,7 +331,28 @@ df = df.replace(
     np.nan
 )
 
+before = len(df)
+
 df = df.dropna()
+
+removed = before - len(df)
+
+if removed > 0:
+
+    print(
+        f"WARNING: {removed} samples removed "
+        f"because of invalid terrain values."
+    )
+
+# We should ideally remove ZERO samples because
+# candidate_mask already guarantees valid features.
+
+if len(df) != target:
+
+    print(
+        f"WARNING: Expected {target} samples, "
+        f"but obtained {len(df)}."
+    )
 
 
 # --------------------------------------------------
