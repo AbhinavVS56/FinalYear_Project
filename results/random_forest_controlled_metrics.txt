@@ -1,0 +1,27 @@
+Controlled Random Forest
+Terrain-only
+Uses exact Model 2 samples and spatial split
+
+Dataset size: 4362
+Training samples: 3491
+Testing samples: 871
+
+Accuracy: 0.7773
+Precision: 0.7600
+Recall: 0.8186
+F1 Score: 0.7882
+ROC-AUC: 0.8492
+
+Confusion Matrix:
+[[316 114]
+ [ 80 361]]
+
+Classification Report:
+               precision    recall  f1-score   support
+
+non-landslide       0.80      0.73      0.77       430
+    landslide       0.76      0.82      0.79       441
+
+     accuracy                           0.78       871
+    macro avg       0.78      0.78      0.78       871
+ weighted avg       0.78      0.78      0.78       871

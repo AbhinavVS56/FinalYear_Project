@@ -1,0 +1,26 @@
+RANDOM FOREST STATIC SUSCEPTIBILITY MODEL
+==================================================
+
+Dataset size: 4433
+Training samples: 3546
+Testing samples: 887
+Spatial block size: 2000 m
+
+Accuracy : 0.7678
+Precision: 0.7469
+Recall   : 0.8077
+F1 Score : 0.7761
+ROC-AUC  : 0.8327
+
+Confusion Matrix:
+[[324 121]
+ [ 85 357]]
+
+Feature Importance:
+   feature  importance
+       tri    0.235199
+     slope    0.221328
+ elevation    0.220910
+ curvature    0.112004
+aspect_cos    0.106903
+aspect_sin    0.103656
