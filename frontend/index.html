@@ -7,6 +7,7 @@
 
     <title>Landslide Risk Dashboard</title>
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -21,7 +22,7 @@
 
             <div>
                 <h1>LANDSLIDE MONITOR</h1>
-                <span>Wayanad • Risk Assessment Dashboard</span>
+                <span>Idukki • Static Susceptibility Dashboard</span>
             </div>
         </div>
 
@@ -47,7 +48,7 @@
                 <h2>Landslide Risk Assessment</h2>
 
                 <p class="subtitle">
-                    Terrain-based landslide susceptibility monitoring
+                    Static ML-based landslide susceptibility monitoring
                 </p>
             </div>
 
@@ -70,10 +71,10 @@
                     <span class="card-icon">⚠</span>
                 </div>
 
-                <h3 class="risk-high">HIGH</h3>
+                <h3 class="risk-high">STATIC</h3>
 
                 <p>
-                    Preliminary terrain-based assessment
+                    RF susceptibility map active
                 </p>
 
             </article>
@@ -82,14 +83,14 @@
             <article class="summary-card">
 
                 <div class="card-top">
-                    <span>CONFIDENCE</span>
+                    <span>MODEL AUC</span>
                     <span class="card-icon">◉</span>
                 </div>
 
-                <h3>--%</h3>
+                <h3>86.08%</h3>
 
                 <p>
-                    Model confidence unavailable
+                    Spatial test ROC-AUC
                 </p>
 
             </article>
@@ -102,10 +103,10 @@
                     <span class="card-icon">◇</span>
                 </div>
 
-                <h3>5</h3>
+                <h3>13</h3>
 
                 <p>
-                    Terrain factors processed
+                    Model input features
                 </p>
 
             </article>
@@ -142,7 +143,7 @@
 
                     <div>
                         <p class="eyebrow">SPATIAL VIEW</p>
-                        <h3>Wayanad Risk Map</h3>
+                        <h3>Idukki Static Susceptibility Map</h3>
                     </div>
 
                     <button id="resetMap" class="small-button">
@@ -154,45 +155,13 @@
 
                 <div class="map-container">
 
-                    <!-- Decorative terrain background -->
+                    <div id="riskMap" aria-label="Idukki static susceptibility map"></div>
 
-                    <div class="terrain terrain-1"></div>
-                    <div class="terrain terrain-2"></div>
-                    <div class="terrain terrain-3"></div>
-                    <div class="terrain terrain-4"></div>
-
-                    <div class="map-label label-north">
-                        N
+                    <div class="map-loading" id="mapLoading">
+                        Loading susceptibility layer…
                     </div>
 
-                    <div class="map-label label-south">
-                        S
-                    </div>
-
-                    <div class="map-location location-1">
-                        <span></span>
-                        <small>North Wayanad</small>
-                    </div>
-
-                    <div class="map-location location-2">
-                        <span></span>
-                        <small>Central Wayanad</small>
-                    </div>
-
-                    <div class="map-location location-3">
-                        <span></span>
-                        <small>South Wayanad</small>
-                    </div>
-
-                    <div class="map-center-text">
-
-                        <div class="map-symbol">⌁</div>
-
-                        <strong>WAYANAD</strong>
-
-                        <span>INTERACTIVE MAP</span>
-
-                    </div>
+                    <div class="map-north-arrow" title="North">N <span>↑</span></div>
 
                 </div>
 
@@ -224,7 +193,7 @@
                     </div>
 
                     <span class="map-note">
-                        Interactive GIS layer — prototype
+                        RF class-1 probability • spatial visualization
                     </span>
 
                 </div>
@@ -239,40 +208,37 @@
                 <div class="panel-header">
 
                     <div>
-                        <p class="eyebrow">SELECTED REGION</p>
-                        <h3>Central Wayanad</h3>
+                        <p class="eyebrow">REFERENCE LOCATION</p>
+                        <h3 id="selectedRegion">Idukki</h3>
                     </div>
 
-                    <span class="risk-badge">
-                        HIGH RISK
-                    </span>
+                    <span class="risk-badge" id="riskBadge">MODERATE</span>
 
                 </div>
 
 
                 <div class="risk-score">
 
-                    <div class="score-ring">
+                    <div class="score-ring" id="scoreRing">
 
                         <div>
-                            <strong>--</strong>
-                            <span>RISK</span>
+                            <strong id="riskScore">49%</strong>
+                            <span>SUSCEPTIBILITY</span>
                         </div>
 
                     </div>
 
                     <div class="score-info">
 
-                        <p>
-                            Final risk score will be generated
-                            by the ML model.
+                        <p id="scoreDescription">
+                            RF class-1 probability at the reference location.
                         </p>
 
                         <div class="confidence-line">
 
-                            <span>Confidence</span>
+                            <span>Coordinates</span>
 
-                            <strong>--</strong>
+                            <strong id="selectedCoords">9.9189°, 77.1025°</strong>
 
                         </div>
 
@@ -286,46 +252,41 @@
 
                 <div class="risk-factors">
 
-                    <h4>Primary Terrain Factors</h4>
+                    <h4>Static Conditioning Factors</h4>
 
                     <div class="factor">
-
                         <span>Elevation</span>
-
-                        <strong>Available</strong>
-
+                        <strong>1028.10 m</strong>
                     </div>
 
                     <div class="factor">
-
                         <span>Slope</span>
-
-                        <strong>Available</strong>
-
+                        <strong>36.71°</strong>
                     </div>
 
                     <div class="factor">
-
                         <span>Aspect</span>
-
-                        <strong>Available</strong>
-
+                        <strong>209.38°</strong>
                     </div>
 
                     <div class="factor">
-
                         <span>Curvature</span>
-
-                        <strong>Available</strong>
-
+                        <strong>-0.005015</strong>
                     </div>
 
                     <div class="factor">
-
                         <span>TRI</span>
+                        <strong>20.25</strong>
+                    </div>
 
-                        <strong>Available</strong>
+                    <div class="factor">
+                        <span>Clay / Sand</span>
+                        <strong>32.85% / 35.05%</strong>
+                    </div>
 
+                    <div class="factor">
+                        <span>Land Cover</span>
+                        <strong>Grassland</strong>
                     </div>
 
                 </div>
@@ -456,13 +417,13 @@
                     <div class="pipeline-line"></div>
 
 
-                    <div class="pipeline-step active">
+                    <div class="pipeline-step completed">
 
                         <span>03</span>
 
                         <div>
                             <strong>Historical Inventory</strong>
-                            <small>In progress</small>
+                            <small>Completed</small>
                         </div>
 
                     </div>
@@ -470,13 +431,13 @@
                     <div class="pipeline-line"></div>
 
 
-                    <div class="pipeline-step pending-step">
+                    <div class="pipeline-step completed">
 
                         <span>04</span>
 
                         <div>
-                            <strong>Static ML Model</strong>
-                            <small>Pending</small>
+                            <strong>Static RF Model</strong>
+                            <small>Completed</small>
                         </div>
 
                     </div>
@@ -490,7 +451,7 @@
 
                         <div>
                             <strong>Dynamic Model</strong>
-                            <small>Pending</small>
+                            <small>Planned</small>
                         </div>
 
                     </div>
@@ -560,12 +521,13 @@
         <span>LANDSLIDE MONITOR</span>
 
         <span>
-            Frontend Prototype • Wayanad
+            Static ML Prototype • Idukki
         </span>
 
     </footer>
 
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <script src="script.js"></script>
 
 </body>
