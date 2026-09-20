@@ -1,171 +1,629 @@
 // =========================================
 // Idukki Static Susceptibility Dashboard
+// Frontend → FastAPI → Random Forest
+// =========================================
+
+
+// =========================================
+// Configuration
+// =========================================
+
+const API_BASE = "http://127.0.0.1:8001";
+
+
+// =========================================
+// Update time
 // =========================================
 
 function updateTime() {
-    const timeElement = document.getElementById("updateTime");
+
+    const timeElement =
+        document.getElementById("updateTime");
+
     if (!timeElement) return;
 
     const now = new Date();
-    const hours = String(now.getHours()).padStart(2, "0");
-    const minutes = String(now.getMinutes()).padStart(2, "0");
 
-    timeElement.textContent = `${hours}:${minutes}`;
+    const hours =
+        String(now.getHours()).padStart(2, "0");
+
+    const minutes =
+        String(now.getMinutes()).padStart(2, "0");
+
+    timeElement.textContent =
+        `${hours}:${minutes}`;
 }
 
 updateTime();
+
 setInterval(updateTime, 30000);
 
 
 // =========================================
-// Reference prediction
+// Reference location
 // =========================================
 
 const reference = {
     lat: 9.9189,
-    lon: 77.1025,
-    susceptibility: 0.49
+    lon: 77.1025
 };
 
+
+// =========================================
+// Risk classification
+// =========================================
+
 function riskClass(value) {
-    if (value < 0.25) return "LOW";
-    if (value < 0.50) return "MODERATE";
-    if (value < 0.75) return "HIGH";
+
+    if (value < 0.25)
+        return "LOW";
+
+    if (value < 0.50)
+        return "MODERATE";
+
+    if (value < 0.75)
+        return "HIGH";
+
     return "VERY HIGH";
 }
 
-function showReferencePrediction() {
-    const score = document.getElementById("riskScore");
-    const badge = document.getElementById("riskBadge");
-    const coords = document.getElementById("selectedCoords");
-    const region = document.getElementById("selectedRegion");
-    const description = document.getElementById("scoreDescription");
 
-    const percent = Math.round(reference.susceptibility * 100);
+// =========================================
+// DOM helper
+// =========================================
 
-    if (score) score.textContent = `${percent}%`;
-    if (badge) badge.textContent = riskClass(reference.susceptibility);
-    if (coords) coords.textContent = `${reference.lat.toFixed(4)}°, ${reference.lon.toFixed(4)}°`;
-    if (region) region.textContent = "Idukki reference point";
-    if (description) {
-        description.textContent =
-            "RF class-1 probability at the reference location. This is a static susceptibility estimate, not a rainfall-triggered warning.";
+function setText(id, value) {
+
+    const element =
+        document.getElementById(id);
+
+    if (element) {
+        element.textContent = value;
     }
 }
 
-showReferencePrediction();
+
+// =========================================
+// Display prediction
+// =========================================
+
+function displayPrediction(data) {
+
+    const susceptibility =
+        Number(data.susceptibility);
+
+    const percent =
+        Number(data.risk_percent);
+
+    // Main risk information
+    setText(
+        "riskScore",
+        `${percent.toFixed(0)}%`
+    );
+
+    setText(
+        "riskBadge",
+        data.risk_class
+    );
+
+    setText(
+        "selectedRegion",
+        "Selected map point"
+    );
+
+    setText(
+        "selectedCoords",
+        `${Number(data.latitude).toFixed(5)}°, ${Number(data.longitude).toFixed(5)}°`
+    );
+
+    // Description
+    setText(
+        "scoreDescription",
+        `${percent.toFixed(1)}% static susceptibility from the Random Forest model. This is not a rainfall-triggered warning.`
+    );
+
+
+    // =====================================
+    // Conditioning factors
+    // =====================================
+
+    setText(
+        "factorElevation",
+        `${Number(data.elevation).toFixed(2)} m`
+    );
+
+    setText(
+        "factorSlope",
+        `${Number(data.slope).toFixed(2)}°`
+    );
+
+    setText(
+        "factorAspect",
+        `${Number(data.aspect).toFixed(2)}°`
+    );
+
+    setText(
+        "factorCurvature",
+        Number(data.curvature).toFixed(6)
+    );
+
+    setText(
+        "factorTri",
+        Number(data.tri).toFixed(2)
+    );
+
+    setText(
+        "factorSoil",
+        `${Number(data.clay).toFixed(2)}% / ${Number(data.sand).toFixed(2)}%`
+    );
+
+    setText(
+        "factorLandcover",
+        data.landcover
+    );
+
+
+    // =====================================
+    // Risk badge styling
+    // =====================================
+
+    const badge =
+        document.getElementById("riskBadge");
+
+    if (badge) {
+
+        badge.className = "risk-badge";
+
+        if (susceptibility < 0.25) {
+
+            badge.classList.add("risk-low");
+
+        } else if (susceptibility < 0.50) {
+
+            badge.classList.add("risk-moderate");
+
+        } else if (susceptibility < 0.75) {
+
+            badge.classList.add("risk-high");
+
+        } else {
+
+            badge.classList.add("risk-very-high");
+        }
+    }
+}
+
+
+// =========================================
+// Loading state
+// =========================================
+
+function showLoading(lat, lon) {
+
+    setText(
+        "selectedRegion",
+        "Analysing map point..."
+    );
+
+    setText(
+        "selectedCoords",
+        `${Number(lat).toFixed(5)}°, ${Number(lon).toFixed(5)}°`
+    );
+
+    setText(
+        "riskScore",
+        "..."
+    );
+
+    setText(
+        "riskBadge",
+        "LOADING"
+    );
+
+    setText(
+        "scoreDescription",
+        "Sending coordinates to the FastAPI backend and running the Random Forest model..."
+    );
+}
+
+
+// =========================================
+// Error state
+// =========================================
+
+function showPredictionError(error) {
+
+    console.error(
+        "Prediction error:",
+        error
+    );
+
+    setText(
+        "selectedRegion",
+        "Prediction unavailable"
+    );
+
+    setText(
+        "riskScore",
+        "--"
+    );
+
+    setText(
+        "riskBadge",
+        "ERROR"
+    );
+
+    setText(
+        "scoreDescription",
+        `${error.message} Make sure FastAPI is running on port 8001.`
+    );
+}
+
+
+// =========================================
+// Send coordinates to FastAPI
+// =========================================
+
+async function predictLocation(lat, lon) {
+
+    showLoading(lat, lon);
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/predict`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        lat: Number(lat),
+                        lon: Number(lon)
+                    })
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                data.detail ||
+                "Backend prediction failed."
+            );
+        }
+
+
+        console.log(
+            "FastAPI prediction:",
+            data
+        );
+
+
+        displayPrediction(data);
+
+
+    } catch (error) {
+
+        showPredictionError(error);
+    }
+}
 
 
 // =========================================
 // Leaflet map
 // =========================================
 
-const mapElement = document.getElementById("riskMap");
-const loadingElement = document.getElementById("mapLoading");
-const resetButton = document.getElementById("resetMap");
+const mapElement =
+    document.getElementById("riskMap");
+
+const loadingElement =
+    document.getElementById("mapLoading");
+
+const resetButton =
+    document.getElementById("resetMap");
+
 
 let riskMap = null;
+
 let susceptibilityLayer = null;
+
 let studyBounds = null;
 
-// Fallback bounds. The JSON generated by create_web_susceptibility_map.py
-// will replace these with exact EPSG:4326 bounds.
+let clickMarker = null;
+
+
+// =========================================
+// Fallback bounds
+// =========================================
+
 const fallbackBounds = [
+
     [9.2708, 76.6277],
+
     [10.3513, 77.4039]
+
 ];
 
-function setMapStatus(message, visible = true) {
+
+// =========================================
+// Map loading status
+// =========================================
+
+function setMapStatus(
+    message,
+    visible = true
+) {
+
     if (!loadingElement) return;
-    loadingElement.textContent = message;
-    loadingElement.style.display = visible ? "flex" : "none";
+
+    loadingElement.textContent =
+        message;
+
+    loadingElement.style.display =
+        visible ? "flex" : "none";
 }
 
+
+// =========================================
+// Load susceptibility map
+// =========================================
+
 async function loadSusceptibilityMap() {
-    if (!mapElement || typeof L === "undefined") {
-        setMapStatus("Leaflet could not be loaded.", true);
+
+    if (
+        !mapElement ||
+        typeof L === "undefined"
+    ) {
+
+        setMapStatus(
+            "Leaflet could not be loaded.",
+            true
+        );
+
         return;
     }
 
-    riskMap = L.map(mapElement, {
-        zoomControl: true,
-        attributionControl: true,
-        minZoom: 8,
-        maxZoom: 14
-    });
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        maxZoom: 19,
-        attribution: "© OpenStreetMap contributors"
-    }).addTo(riskMap);
+    // =====================================
+    // Create Leaflet map
+    // =====================================
+
+    riskMap =
+        L.map(
+            mapElement,
+            {
+                zoomControl: true,
+
+                attributionControl: true,
+
+                minZoom: 8,
+
+                maxZoom: 14
+            }
+        );
+
+
+    // =====================================
+    // OpenStreetMap base layer
+    // =====================================
+
+    L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+            maxZoom: 19,
+
+            attribution:
+                "© OpenStreetMap contributors"
+        }
+    ).addTo(riskMap);
+
+
+    // =====================================
+    // Load exact map bounds
+    // =====================================
 
     try {
-        const boundsResponse = await fetch("map_data/idukki_map_bounds.json", {
-            cache: "no-store"
-        });
+
+        const boundsResponse =
+            await fetch(
+                "map_data/idukki_map_bounds.json",
+                {
+                    cache: "no-store"
+                }
+            );
+
 
         if (boundsResponse.ok) {
-            const b = await boundsResponse.json();
+
+            const b =
+                await boundsResponse.json();
+
+
             studyBounds = [
+
                 [b.south, b.west],
+
                 [b.north, b.east]
+
             ];
+
         } else {
-            studyBounds = fallbackBounds;
+
+            studyBounds =
+                fallbackBounds;
         }
+
+
     } catch (error) {
-        console.warn("Could not load map bounds JSON. Using fallback bounds.", error);
-        studyBounds = fallbackBounds;
+
+        console.warn(
+            "Could not load map bounds. Using fallback bounds.",
+            error
+        );
+
+        studyBounds =
+            fallbackBounds;
     }
 
-    riskMap.fitBounds(studyBounds, { padding: [10, 10] });
+
+    // =====================================
+    // Fit map to Idukki
+    // =====================================
+
+    riskMap.fitBounds(
+        studyBounds,
+        {
+            padding: [10, 10]
+        }
+    );
+
+
+    // =====================================
+    // Susceptibility layer
+    // =====================================
 
     try {
-        susceptibilityLayer = L.imageOverlay(
-            "map_data/idukki_static_susceptibility.png",
-            studyBounds,
-            {
-                opacity: 0.82,
-                interactive: false
+
+        susceptibilityLayer =
+            L.imageOverlay(
+
+                "map_data/idukki_static_susceptibility.png",
+
+                studyBounds,
+
+                {
+                    opacity: 0.82,
+
+                    interactive: false
+                }
+
+            ).addTo(riskMap);
+
+
+        susceptibilityLayer.once(
+            "load",
+            () => {
+
+                setMapStatus(
+                    "",
+                    false
+                );
             }
-        ).addTo(riskMap);
+        );
 
-        susceptibilityLayer.once("load", () => {
-            setMapStatus("", false);
-        });
 
-        susceptibilityLayer.once("error", () => {
-            setMapStatus("Susceptibility image not found. Run the map conversion script first.", true);
-        });
+        susceptibilityLayer.once(
+            "error",
+            () => {
+
+                setMapStatus(
+                    "Susceptibility image not found. Run create_web_susceptibility_map.py first.",
+                    true
+                );
+            }
+        );
+
+
     } catch (error) {
-        console.error(error);
-        setMapStatus("Could not load susceptibility layer.", true);
+
+        console.error(
+            error
+        );
+
+        setMapStatus(
+            "Could not load susceptibility layer.",
+            true
+        );
     }
 
-    // Map click currently selects a coordinate only.
-    // Point-level raster lookup will be connected to the backend later.
-    riskMap.on("click", (event) => {
-        const lat = event.latlng.lat.toFixed(5);
-        const lon = event.latlng.lng.toFixed(5);
 
-        const coords = document.getElementById("selectedCoords");
-        const region = document.getElementById("selectedRegion");
-        const score = document.getElementById("riskScore");
-        const badge = document.getElementById("riskBadge");
-        const description = document.getElementById("scoreDescription");
+    // =====================================
+    // MAP CLICK
+    // =====================================
 
-        if (coords) coords.textContent = `${lat}°, ${lon}°`;
-        if (region) region.textContent = "Selected map point";
-        if (score) score.textContent = "--";
-        if (badge) badge.textContent = "MAP POINT";
-        if (description) {
-            description.textContent =
-                "The susceptibility layer is active. Point-level feature extraction will be connected to this click interaction in the next backend step.";
+    riskMap.on(
+        "click",
+        async (event) => {
+
+            const lat =
+                event.latlng.lat;
+
+            const lon =
+                event.latlng.lng;
+
+
+            console.log(
+                "Map clicked:",
+                lat,
+                lon
+            );
+
+
+            // Remove previous marker
+            if (clickMarker) {
+
+                clickMarker.remove();
+            }
+
+
+            // Add new marker
+            clickMarker =
+                L.circleMarker(
+                    [lat, lon],
+                    {
+                        radius: 7,
+
+                        weight: 2,
+
+                        fillOpacity: 0.9
+                    }
+                ).addTo(riskMap);
+
+
+            // Send coordinates
+            // to FastAPI
+            await predictLocation(
+                lat,
+                lon
+            );
         }
-    });
+    );
 
-    setTimeout(() => riskMap.invalidateSize(), 150);
+
+    // Fix Leaflet rendering
+    setTimeout(
+        () => {
+
+            riskMap.invalidateSize();
+
+        },
+        150
+    );
+
+
+    // =====================================
+    // Initial reference prediction
+    // =====================================
+
+    await predictLocation(
+        reference.lat,
+        reference.lon
+    );
 }
+
+
+// =========================================
+// Start map
+// =========================================
 
 loadSusceptibilityMap();
 
@@ -175,14 +633,41 @@ loadSusceptibilityMap();
 // =========================================
 
 if (resetButton) {
-    resetButton.addEventListener("click", () => {
-        if (riskMap && studyBounds) {
-            riskMap.fitBounds(studyBounds, {
-                padding: [10, 10],
-                animate: true
-            });
-        }
 
-        showReferencePrediction();
-    });
+    resetButton.addEventListener(
+        "click",
+        () => {
+
+            if (
+                riskMap &&
+                studyBounds
+            ) {
+
+                riskMap.fitBounds(
+                    studyBounds,
+                    {
+                        padding: [10, 10],
+
+                        animate: true
+                    }
+                );
+            }
+
+
+            // Remove click marker
+            if (clickMarker) {
+
+                clickMarker.remove();
+
+                clickMarker = null;
+            }
+
+
+            // Reset to reference location
+            predictLocation(
+                reference.lat,
+                reference.lon
+            );
+        }
+    );
 }

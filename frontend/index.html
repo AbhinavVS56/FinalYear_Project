@@ -203,95 +203,185 @@
 
             <!-- ================= RISK PANEL ================= -->
 
-            <article class="panel risk-panel">
+<article class="panel risk-panel">
 
-                <div class="panel-header">
+    <div class="panel-header">
 
-                    <div>
-                        <p class="eyebrow">REFERENCE LOCATION</p>
-                        <h3 id="selectedRegion">Idukki</h3>
-                    </div>
+        <div>
+            <p class="eyebrow">SELECTED REGION</p>
 
-                    <span class="risk-badge" id="riskBadge">MODERATE</span>
+            <h3 id="selectedRegion">
+                Idukki
+            </h3>
+        </div>
 
-                </div>
+        <span class="risk-badge" id="riskBadge">
+            MODERATE
+        </span>
 
-
-                <div class="risk-score">
-
-                    <div class="score-ring" id="scoreRing">
-
-                        <div>
-                            <strong id="riskScore">49%</strong>
-                            <span>SUSCEPTIBILITY</span>
-                        </div>
-
-                    </div>
-
-                    <div class="score-info">
-
-                        <p id="scoreDescription">
-                            RF class-1 probability at the reference location.
-                        </p>
-
-                        <div class="confidence-line">
-
-                            <span>Coordinates</span>
-
-                            <strong id="selectedCoords">9.9189°, 77.1025°</strong>
-
-                        </div>
-
-                    </div>
-
-                </div>
+    </div>
 
 
-                <div class="divider"></div>
+    <div class="risk-score">
+
+        <div class="score-ring" id="scoreRing">
+
+            <div>
+                <strong id="riskScore">
+                    49%
+                </strong>
+
+                <span>
+                    SUSCEPTIBILITY
+                </span>
+            </div>
+
+        </div>
 
 
-                <div class="risk-factors">
+        <div class="score-info">
 
-                    <h4>Static Conditioning Factors</h4>
+            <p id="scoreDescription">
+                RF class-1 probability at the reference location.
+                This is a static susceptibility estimate, not a
+                rainfall-triggered warning.
+            </p>
 
-                    <div class="factor">
-                        <span>Elevation</span>
-                        <strong>1028.10 m</strong>
-                    </div>
 
-                    <div class="factor">
-                        <span>Slope</span>
-                        <strong>36.71°</strong>
-                    </div>
+            <div class="confidence-line">
 
-                    <div class="factor">
-                        <span>Aspect</span>
-                        <strong>209.38°</strong>
-                    </div>
+                <span>
+                    Coordinates
+                </span>
 
-                    <div class="factor">
-                        <span>Curvature</span>
-                        <strong>-0.005015</strong>
-                    </div>
+                <strong id="selectedCoords">
+                    9.9189°, 77.1025°
+                </strong>
 
-                    <div class="factor">
-                        <span>TRI</span>
-                        <strong>20.25</strong>
-                    </div>
+            </div>
 
-                    <div class="factor">
-                        <span>Clay / Sand</span>
-                        <strong>32.85% / 35.05%</strong>
-                    </div>
+        </div>
 
-                    <div class="factor">
-                        <span>Land Cover</span>
-                        <strong>Grassland</strong>
-                    </div>
+    </div>
 
-                </div>
 
-            </article>
+    <div class="divider"></div>
+
+
+    <div class="risk-factors">
+
+        <h4>
+            Static Conditioning Factors
+        </h4>
+
+
+        <!-- Elevation -->
+
+        <div class="factor">
+
+            <span>
+                Elevation
+            </span>
+
+            <strong id="factorElevation">
+                1028.10 m
+            </strong>
+
+        </div>
+
+
+        <!-- Slope -->
+
+        <div class="factor">
+
+            <span>
+                Slope
+            </span>
+
+            <strong id="factorSlope">
+                36.71°
+            </strong>
+
+        </div>
+
+
+        <!-- Aspect -->
+
+        <div class="factor">
+
+            <span>
+                Aspect
+            </span>
+
+            <strong id="factorAspect">
+                209.38°
+            </strong>
+
+        </div>
+
+
+        <!-- Curvature -->
+
+        <div class="factor">
+
+            <span>
+                Curvature
+            </span>
+
+            <strong id="factorCurvature">
+                -0.005015
+            </strong>
+
+        </div>
+
+
+        <!-- TRI -->
+
+        <div class="factor">
+
+            <span>
+                TRI
+            </span>
+
+            <strong id="factorTri">
+                20.25
+            </strong>
+
+        </div>
+
+
+        <!-- Soil -->
+
+        <div class="factor">
+
+            <span>
+                Clay / Sand
+            </span>
+
+            <strong id="factorSoil">
+                32.85% / 35.05%
+            </strong>
+
+        </div>
+
+
+        <!-- Land Cover -->
+
+        <div class="factor">
+
+            <span>
+                Land Cover
+            </span>
+
+            <strong id="factorLandcover">
+                Grassland
+            </strong>
+
+        </div>
+
+    </div>
+
+</article>
 
 
         </section>
