@@ -1,0 +1,19 @@
+Test Accuracy: 0.7750
+Test Precision: 0.7239
+Test Recall: 0.8980
+Test F1: 0.8016
+Test ROC-AUC: 0.8583
+Threshold: 0.4900
+
+Confusion Matrix:
+[[279 151]
+ [ 45 396]]
+
+               precision    recall  f1-score   support
+
+Non-landslide     0.8611    0.6488    0.7401       430
+    Landslide     0.7239    0.8980    0.8016       441
+
+     accuracy                         0.7750       871
+    macro avg     0.7925    0.7734    0.7708       871
+ weighted avg     0.7917    0.7750    0.7712       871

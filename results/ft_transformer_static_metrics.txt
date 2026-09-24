@@ -1,0 +1,29 @@
+FT-TRANSFORMER-STYLE STATIC LANDSLIDE SUSCEPTIBILITY
+============================================================
+
+Features: ['elevation', 'slope', 'aspect_sin', 'aspect_cos', 'curvature', 'tri', 'clay', 'sand', 'lc_10', 'lc_30', 'lc_40', 'lc_50', 'lc_80']
+Seeds: [42, 142, 242]
+Test samples: 871
+
+Validation threshold: 0.3000
+Validation F1: 0.8104
+
+Test Accuracy: 0.7577
+Test Precision: 0.6930
+Test Recall: 0.9365
+Test F1: 0.7965
+Test ROC-AUC: 0.8557
+
+Confusion Matrix:
+[[247 183]
+ [ 28 413]]
+
+Classification Report:
+               precision    recall  f1-score   support
+
+Non-landslide     0.8982    0.5744    0.7007       430
+    Landslide     0.6930    0.9365    0.7965       441
+
+     accuracy                         0.7577       871
+    macro avg     0.7956    0.7555    0.7486       871
+ weighted avg     0.7943    0.7577    0.7492       871

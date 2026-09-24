@@ -1,0 +1,33 @@
+MSCNN V3 HYBRID STATIC LANDSLIDE SUSCEPTIBILITY
+============================================================
+
+Dataset size: 4362
+Training samples: 2792
+Validation samples: 699
+Testing samples: 871
+Patch size: 13x13
+Input channels: 13
+Spatial block size: 2000 m
+
+Best epoch: 2
+Validation AUC: 0.7880
+
+Accuracy : 0.6900
+Precision: 0.6557
+Recall   : 0.8163
+F1 Score : 0.7273
+ROC-AUC  : 0.6900
+
+Confusion Matrix:
+[[241 189]
+ [ 81 360]]
+
+Classification Report:
+               precision    recall  f1-score   support
+
+Non-Landslide       0.75      0.56      0.64       430
+    Landslide       0.66      0.82      0.73       441
+
+     accuracy                           0.69       871
+    macro avg       0.70      0.69      0.68       871
+ weighted avg       0.70      0.69      0.68       871

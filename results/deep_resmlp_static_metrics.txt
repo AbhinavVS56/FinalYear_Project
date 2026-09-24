@@ -1,0 +1,32 @@
+DEEP RESMLP STATIC LANDSLIDE SUSCEPTIBILITY
+
+Dataset:
+C:\Users\user\Downloads\Final Year Project\datasets\processed\training\idukki_training_dataset_v2.csv
+
+Features:
+['elevation', 'slope', 'aspect_sin', 'aspect_cos', 'curvature', 'tri', 'clay', 'sand', 'lc_10', 'lc_30', 'lc_40', 'lc_50', 'lc_80']
+
+Samples:
+Training   : 2791
+Validation : 700
+Testing    : 871
+
+Models in ensemble:
+3
+
+Validation-selected threshold:
+0.5300
+
+Validation F1:
+0.8342
+
+FINAL SPATIAL TEST RESULTS
+Accuracy : 0.7899
+Precision: 0.7452
+Recall   : 0.8889
+F1 Score : 0.8108
+ROC-AUC  : 0.8626
+
+Confusion Matrix:
+[[296 134]
+ [ 49 392]]

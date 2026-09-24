@@ -1,0 +1,33 @@
+MSCNN V2 STATIC LANDSLIDE SUSCEPTIBILITY
+============================================================
+
+Dataset size: 4362
+Training samples: 2792
+Validation samples: 699
+Testing samples: 871
+Patch size: 13x13
+Input channels: 13
+Spatial block size: 2000 m
+
+Best epoch: 14
+Validation AUC: 0.7890
+
+Accuracy : 0.6636
+Precision: 0.6850
+Recall   : 0.6213
+F1 Score : 0.6516
+ROC-AUC  : 0.7140
+
+Confusion Matrix:
+[[304 126]
+ [167 274]]
+
+Classification Report:
+               precision    recall  f1-score   support
+
+Non-Landslide       0.65      0.71      0.67       430
+    Landslide       0.69      0.62      0.65       441
+
+     accuracy                           0.66       871
+    macro avg       0.67      0.66      0.66       871
+ weighted avg       0.67      0.66      0.66       871

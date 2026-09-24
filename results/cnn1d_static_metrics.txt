@@ -1,0 +1,30 @@
+1D CNN STATIC LANDSLIDE SUSCEPTIBILITY
+============================================================
+
+Dataset: ../datasets/processed/training/idukki_training_dataset_v2.csv
+Features: ['elevation', 'slope', 'aspect_sin', 'aspect_cos', 'curvature', 'tri', 'clay', 'sand', 'lc_10', 'lc_30', 'lc_40', 'lc_50', 'lc_80']
+Seeds: [42, 142, 242]
+Test samples: 871
+
+Validation threshold: 0.4800
+Validation F1: 0.8120
+
+Test Accuracy: 0.7750
+Test Precision: 0.7231
+Test Recall: 0.9002
+Test F1: 0.8020
+Test ROC-AUC: 0.8411
+
+Confusion Matrix:
+[[278 152]
+ [ 44 397]]
+
+Classification Report:
+               precision    recall  f1-score   support
+
+Non-landslide     0.8634    0.6465    0.7394       430
+    Landslide     0.7231    0.9002    0.8020       441
+
+     accuracy                         0.7750       871
+    macro avg     0.7932    0.7734    0.7707       871
+ weighted avg     0.7924    0.7750    0.7711       871

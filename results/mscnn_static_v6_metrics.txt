@@ -1,0 +1,33 @@
+MSCNN V6 PAPER-ALIGNED STATIC LANDSLIDE SUSCEPTIBILITY
+============================================================
+
+Dataset size: 4362
+Training samples: 2792
+Validation samples: 699
+Testing samples: 871
+Patch size: 13x13
+Input channels: 13
+Spatial block size: 2000 m
+
+Best epoch: 17
+Validation AUC: 0.7986
+
+Accuracy : 0.6556
+Precision: 0.6523
+Recall   : 0.6848
+F1 Score : 0.6681
+ROC-AUC  : 0.7005
+
+Confusion Matrix:
+[[269 161]
+ [139 302]]
+
+Classification Report:
+               precision    recall  f1-score   support
+
+Non-Landslide       0.66      0.63      0.64       430
+    Landslide       0.65      0.68      0.67       441
+
+     accuracy                           0.66       871
+    macro avg       0.66      0.66      0.66       871
+ weighted avg       0.66      0.66      0.66       871
